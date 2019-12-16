@@ -24,7 +24,7 @@ _C.INPUT = CN()
 # PATH of the json pair (containing relative path path of images and label)
 
 # path of training directory
-_C.INPUT.TRAINING_DIRECTORY = "../../3DMatch/training/"
+_C.INPUT.TRAINING_DIRECTORY = "."
 
 # shape of the depth images
 _C.INPUT.INPUT_SHAPE = (640, 480)
