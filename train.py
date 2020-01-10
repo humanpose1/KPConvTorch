@@ -14,8 +14,8 @@ from dataset.dataloader import MultiScaleDataLoader
 from models.KPCNN import KPCNN
 from models.losses import compute_classification_loss
 from models.losses import compute_classification_accuracy
-from utils.config import get_cfg_defaults
-from utils.misc import get_list_constants, shadow_neigh
+from utility.config import get_cfg_defaults
+from utility.misc import get_list_constants, shadow_neigh
 
 
 def train():
