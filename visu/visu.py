@@ -2,7 +2,7 @@
 
 import open3d
 import torch
-from misc.graph_manipulation import list_neigh2list_edge
+from visu.graph_manipulation import list_neigh2list_edge
 
 
 

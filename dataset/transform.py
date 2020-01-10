@@ -10,7 +10,7 @@ from dataset.data import MultiScaleBatch
 from dataset.data import MultiScaleData
 
 
-from neighbors import radius_search
+from torch_radius_search import radius_search
 
 
 # preprocessing Inputs (creation of the graph)
@@ -102,7 +102,7 @@ class Neighbors(object):
 
         return radius_search(query_points,
                              support_points,
-                             radius, self.max_num_neighbors, self.mode)
+                             radius, self.max_num_neighbors, self.mode)[0]
 
     def __call__(self, data):
         # TODO batch version

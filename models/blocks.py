@@ -227,6 +227,7 @@ class ResnetBottleNeckBlock(Block):
 class MaxPool(torch.nn.Module):
     """
     layer that perform max_pooling
+    TODO : when the neural network is
     """
     def __init__(self, layer_ind):
         super(MaxPool, self).__init__()
@@ -237,6 +238,7 @@ class MaxPool(torch.nn.Module):
         if(data.pools[self.layer_ind].shape[1] > 2):
             x = max_pool(inputs, data.pools[self.layer_ind])
         else:
+            raise NotImplementedError("implement for list of edges")
             x = None
         data.x = x
         return data
@@ -245,8 +247,12 @@ class MaxPool(torch.nn.Module):
 class GlobalPool(torch.nn.Module):
     """
     global pooling layer
+
+    mode: 0 use torch scatter to pool the point cloud
+    mode 1 use for loop
     """
-    def __init__(self):
+    def __init__(self, mode=0):
+        self.mode = mode
         super(GlobalPool, self).__init__()
 
     def forward(self, data):
@@ -256,9 +262,44 @@ class GlobalPool(torch.nn.Module):
         if(len(inputs) != len(batch)):
             raise Exception("Error, the batch and the features have not the same size")
 
-        x = global_mean_pool(inputs, batch)
+        if(self.mode == 0):
+            x = global_mean_pool(inputs, batch)
+        elif(self.mode == 1):
+            ind_batch = torch.unique(batch)
+            list_pool = [inputs[batch == ind].mean(axis=0) for ind in ind_batch]
+            x = torch.stack(list_pool)
+
         data.x = x
         return data
+
+
+class NearestUpsample(Block):
+
+    def __init__(self, layer_ind):
+        super(NearestUpsample, self).__init__()
+        self.layer_ind = layer_ind
+
+    def forward(self, data):
+        if(data.list_upsample[self.layer_ind].size(1) > 2):
+            shadow = torch.zeros(1, data.x.size(1),
+                                 dtype=data.x.dtype,
+                                 device=data.x.device)
+            inputs = torch.cat([data.x, shadow],
+                               axis=0)
+            inds = data.list_upsample[self.layer_ind][:, 0]
+            res = inputs[inds]
+            data.x = res
+            return data
+
+        else:
+            inputs = data.x
+            col, row = data.list_upsample[self.layer_ind].t()
+            shortest = torch.cumsum(row.bincount(), 0)
+            shortest[-1] = 0
+            inds = col[shortest]
+            res = inputs[inds]
+            data.x = res
+            return data
 
 
 class MLPClassifier(Block):
@@ -361,7 +402,7 @@ def get_block_ops(name, num_inputs, num_outputs, layer_ind,
     elif name == "max_pool":
         block = MaxPool(layer_ind)
     elif name == "global_average":
-        block = GlobalPool()
+        block = GlobalPool(mode=0)
     else:
         raise ValueError("Unknown block name in the architecture definition : " + name)
     return block
